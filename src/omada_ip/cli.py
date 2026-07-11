@@ -9,13 +9,13 @@ app = typer.Typer()
 
 @app.command()
 def pppoe():
-    asyncio.run(run_renew_ip(PppoeRenewer, delay=5))
+    asyncio.run(run_renew_ip(PppoeRenewer, delay=60))
     print("PPPoE renewal complete.")
 
 
 @app.command()
 def wan():
-    asyncio.run(run_renew_ip(WanResetRenewer, delay=60))
+    asyncio.run(run_renew_ip(WanResetRenewer, delay=30))
     print("WAN port renewal complete.")
 
 
