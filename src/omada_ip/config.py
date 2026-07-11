@@ -4,7 +4,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 IP_CHECK_TIMEOUT = 2  # seconds
-PPPOE_REDIAL_INTERVAL = 2
+PPPOE_REDIAL_INTERVAL = 10
 
 CONFIG_DIR = Path.home() / ".config" / "omada_ip"
 ENV_FILE = CONFIG_DIR / ".env"
