@@ -1,4 +1,5 @@
 import asyncio
+import time
 from abc import ABC, abstractmethod
 
 from loguru import logger as l
@@ -33,6 +34,7 @@ class IpRenewer(ABC):
         l.info(f"{response=}")
 
     async def renew_ip(self, delay: int) -> None:
+        start_time = time.time()
         async with OmadaApiConnection(
             self.cfg.url,
             self.cfg.omada_user,
@@ -42,11 +44,11 @@ class IpRenewer(ABC):
             await api.login()
             l.info(f"Previous IP: {get_public_ip()}")
 
-            await self.send_payload(api, False)
+            await self.send_payload(api, turn_on=False)
             await asyncio.sleep(delay)
-            await self.send_payload(api, True)
+            await self.send_payload(api, turn_on=True)
 
-            l.info(f"New IP: {get_public_ip()}")
+            l.info(f"New IP: {get_public_ip()}; took {(time.time() - start_time):.2f}s")
 
 
 class WanResetRenewer(IpRenewer):
@@ -93,6 +95,7 @@ class PppoeRenewer(IpRenewer):
                     "qosTagEnable": "false",
                     "vlanPriority": 0,
                     "ipv4Pppoe": {
+                        "redialInterval": 10,
                         "mtu": 1492,
                         "mru": 1492,
                         "dns1": "1.1.1.1",
@@ -100,7 +103,7 @@ class PppoeRenewer(IpRenewer):
                         "userName": self.cfg.isp_user,
                         "password": self.cfg.isp_password,
                         "ipFromIsp": "on",
-                        "linkType": "auto" if turn_on else "demand",
+                        "linkType": "auto" if turn_on else "manual",
                         "mssClampingType": 1,
                         "mssClampingValue": "null",
                         "ipv4Connection2": {
