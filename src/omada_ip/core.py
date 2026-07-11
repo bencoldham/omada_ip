@@ -42,13 +42,21 @@ class IpRenewer(ABC):
             verify_ssl=False,
         ) as api:
             await api.login()
-            l.info(f"Previous IP: {get_public_ip()}")
+            old_ip = await get_public_ip()
+
+            l.info(f"Previous IP: {old_ip}")
 
             await self.send_payload(api, turn_on=False)
             await asyncio.sleep(delay)
             await self.send_payload(api, turn_on=True)
 
-            l.info(f"New IP: {get_public_ip()}; took {(time.time() - start_time):.2f}s")
+            new_ip = await get_public_ip()
+            l.info(f"New IP: {new_ip}; took {(time.time() - start_time):.2f}s")
+
+            if old_ip == new_ip:
+                l.warning("IP address was not changed.")
+            else:
+                l.info("IP address changed successfully.")
 
 
 class WanResetRenewer(IpRenewer):

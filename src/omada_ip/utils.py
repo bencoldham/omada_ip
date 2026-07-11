@@ -1,6 +1,13 @@
-import requests
+import httpx
+from loguru import logger as l
 
 
-def get_public_ip():
-    response = requests.get("https://api.ipify.org", timeout=300)
-    return response.text
+async def get_public_ip():
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                response = await client.get("https://api.ipify.org", timeout=5.0)
+                response.raise_for_status()
+                return response.text
+            except (httpx.HTTPError, httpx.RequestError) as e:
+                l.error(f"Connection failed: {e}. Retrying immediately.")
