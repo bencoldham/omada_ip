@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from loguru import logger as l
 from tplink_omada_client.omadaapiconnection import OmadaApiConnection
 
-from omada_ip.config import IpConfig, config
+from omada_ip.config import IP_CHECK_TIMEOUT, PPPOE_REDIAL_INTERVAL, IpConfig, config
 from omada_ip.utils import get_public_ip
 
 
@@ -42,7 +42,7 @@ class IpRenewer(ABC):
             verify_ssl=False,
         ) as api:
             await api.login()
-            old_ip = await get_public_ip()
+            old_ip = await get_public_ip(IP_CHECK_TIMEOUT)
 
             l.info(f"Previous IP: {old_ip}")
 
@@ -50,7 +50,7 @@ class IpRenewer(ABC):
             await asyncio.sleep(delay)
             await self.send_payload(api, turn_on=True)
 
-            new_ip = await get_public_ip()
+            new_ip = await get_public_ip(IP_CHECK_TIMEOUT)
             l.info(f"New IP: {new_ip}; took {(time.time() - start_time):.2f}s")
 
             if old_ip == new_ip:
@@ -103,7 +103,7 @@ class PppoeRenewer(IpRenewer):
                     "qosTagEnable": "false",
                     "vlanPriority": 0,
                     "ipv4Pppoe": {
-                        "redialInterval": 10,
+                        "redialInterval": str(PPPOE_REDIAL_INTERVAL),
                         "mtu": 1492,
                         "mru": 1492,
                         "dns1": "1.1.1.1",
