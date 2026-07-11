@@ -13,8 +13,8 @@ class IpRenewer(ABC):
         self.cfg = cfg
 
     @property
-    @abstractmethod
-    def base_url(self) -> str: ...
+    def base_url(self) -> str:
+        return f"gateways/{self.cfg.mac}/ports"
 
     @abstractmethod
     def payload(self, turn_on: bool) -> dict: ...
@@ -57,8 +57,10 @@ class WanResetRenewer(IpRenewer):
     async def send_payload(self, api: OmadaApiConnection, turn_on: bool):
         target_url = api.format_url(self.base_url, self.cfg.site_id)
         l.info(f"Sending {turn_on=} to {self.cfg.mac} Port 2.... URL = {target_url}")
+
         json = self.payload(turn_on)
         l.info(f"{json=}")
+
         response = await api.request("put", target_url, json=json)
         l.info(f"Response: {response}")
 
