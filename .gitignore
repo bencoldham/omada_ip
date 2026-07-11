@@ -1,0 +1,22 @@
+# --- Python Packaging ---
+build/
+dist/
+*.egg-info/
+
+# --- Virtual Environments ---
+.venv/
+env/
+venv/
+
+# --- Python Internals ---
+__pycache__/
+*.pyc
+*.pyo
+
+# --- Environment & Config ---
+.env
+
+# --- IDE/System ---
+.DS_Store
+.vscode/
+.idea/
