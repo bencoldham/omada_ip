@@ -12,13 +12,15 @@ class IpRenewer(ABC):
     def __init__(self, cfg: IpConfig):
         self.cfg = cfg
 
+    @property
     @abstractmethod
-    def payload(self, turn_on: bool) -> dict:
-        pass
+    def base_url(self) -> str: ...
 
     @abstractmethod
-    async def send_payload(self, api: OmadaApiConnection, turn_on: bool):
-        pass
+    def payload(self, turn_on: bool) -> dict: ...
+
+    @abstractmethod
+    async def send_payload(self, api: OmadaApiConnection, turn_on: bool): ...
 
     async def renew_ip(self, delay: int) -> None:
         async with OmadaApiConnection(
@@ -37,7 +39,7 @@ class IpRenewer(ABC):
             l.info(f"New IP: {get_public_ip()}")
 
 
-class PppoeRenewer(IpRenewer):
+class WanResetRenewer(IpRenewer):
     def payload(self, turn_on: bool):
         return {
             "port": 2,
@@ -48,14 +50,20 @@ class PppoeRenewer(IpRenewer):
             "loopbackControl": 0,
         }
 
+    @property
+    def base_url(self) -> str:
+        return f"gateways/{self.cfg.mac}/ports"
+
     async def send_payload(self, api: OmadaApiConnection, turn_on: bool):
-        target_url = api.format_url("wan/networks/port-setting", self.cfg.site_id)
+        target_url = api.format_url(self.base_url, self.cfg.site_id)
         l.info(f"Sending {turn_on=} to {self.cfg.mac} Port 2.... URL = {target_url}")
-        response = await api.request("patch", target_url, json=self.payload(turn_on))
+        json = self.payload(turn_on)
+        l.info(f"{json=}")
+        response = await api.request("put", target_url, json=json)
         l.info(f"Response: {response}")
 
 
-class WanResetRenewer(IpRenewer):
+class PppoeRenewer(IpRenewer):
     def payload(self, turn_on: bool):
         return {
             "wanPortSetting": {
